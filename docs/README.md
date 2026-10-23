@@ -1,5 +1,7 @@
 # Hesychius, Γλῶσσαι: a lookup
 
+https://dmhruprecht.github.io/hesychius/
+
 A searchable interface to the lexicon of Hesychius of Alexandria, built from the text on
 [Greek Wikisource](https://el.wikisource.org/wiki/%CE%93%CE%BB%CF%8E%CF%83%CF%83%CE%B1%CE%B9).
 
