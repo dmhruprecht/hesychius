@@ -41,6 +41,7 @@
   a { color: var(--accent); text-underline-offset: 3px; }
   a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
   .lede { color: var(--muted); }
+  p, li, td { color: var(--muted); }
   ol, ul { padding-left: 1.3rem; }
   li + li { margin-top: .25rem; }
   code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .88em; }
@@ -49,6 +50,7 @@
   th { font-weight: 700; }
   .warn { border-left: 3px solid var(--warn); padding-left: .8rem; }
   .small { font-size: .95rem; color: var(--muted); }
+  .small.signature { color: color-mix(in srgb, var(--muted) 30%, var(--ink)); }
 </style>
 </head>
 <body>
@@ -57,18 +59,17 @@
   <h1>About</h1>
   <p class="lede"> This site is meant to offer an accessible and user-friendly interface to access Hesychius' Greek lexicon. The text comes from <a href="https://el.wikisource.org/wiki/%CE%93%CE%BB%CF%8E%CF%83%CF%83%CE%B1%CE%B9">Greek Wikisource </a>, not cross-referenced with any printed editions.  My thanks to the Wikisource editors, to the Perseus Digital Library, and the Logeion project.</p>
 
-    <h2>Entries</h2>
-  <p class="lede">Each entry is read as a <code>&lt;headword&gt;</code> line followed by its definition, with outer brackets removed, printed marks (<code>*</code> <code>†</code> <code>[</code>) kept in grey, and page headings dropped, and all text is Unicode-normalized with repeated spaces collapsed. Entries typed in Beta Code (Greek in Latin letters, such as <code>QHRÍON</code>) are converted to Greek by the <a href="https://stephanus.tlg.uci.edu/encoding.php">TLG rules</a> and flagged.</p>
+  <p>Each entry is read as a <code>&lt;headword&gt;</code> line followed by its definition, with outer brackets removed, printed marks (<code>*</code> <code>†</code> <code>[</code>) kept in grey, and page headings dropped, and all text is Unicode-normalized with repeated spaces collapsed. Entries typed in Beta Code (Greek in Latin letters, such as <code>QHRÍON</code>) are converted to Greek by the <a href="https://stephanus.tlg.uci.edu/encoding.php">TLG rules</a> and flagged.</p>
 
   <h2 id="credits">Credits and license</h2>
-  <p class="lede">The text was digitized by the contributors to Greek Wikisource under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> and is shared here under the same license, though Wikisource does not name the printed edition behind it, so any rights that edition carries are unknown to me.</p>
-  <p class="lede">Dictionary lookups link to <a href="https://logeion.uchicago.edu/about">Logeion</a> (University of Chicago); nothing from it is stored here. Where an LSJ short definition is shown, it comes from the Perseus Digital Library's LSJ (CC BY-SA 4.0)</p>
-  <p class="lede">Fonts: New Athena Unicode (Society for Classical Studies) and Gentium Plus (SIL International), under the SIL Open Font License; licenses are in the <code>fonts</code> folder.</p>
-  <!-- TODO: add a contact address (for people who know the source edition) once the site is hosted. -->
-  <!-- TODO: choose and state a license for the two scripts (separate from the text). -->
+  <p>The text was digitized by the contributors to Greek Wikisource under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> and is shared here under the same license, though Wikisource does not name the printed edition behind it, so any rights that edition carries are unknown to me.</p>
+  <p>Dictionary lookups link to <a href="https://logeion.uchicago.edu/about">Logeion</a> (University of Chicago); nothing from it is stored here. Where an LSJ short definition is shown, it comes from the Perseus Digital Library's LSJ (CC BY-SA 4.0)</p>
+  
+  <h2>Fonts</h2>
+  <p> New Athena Unicode (Society for Classical Studies) and Gentium Plus (SIL International), under the SIL Open Font License; licenses are in the <code>fonts</code> folder.</p>
 
     <h3></h3>
-    <p class="small">Created by D.M.H. Ruprecht.</p>
+    <p class="small signature">Created by D.M.H. Ruprecht.</p>
     
 </main>
 
