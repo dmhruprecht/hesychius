@@ -3,9 +3,9 @@
 A searchable interface to the lexicon of Hesychius of Alexandria, built from the text on
 [Greek Wikisource](https://el.wikisource.org/wiki/%CE%93%CE%BB%CF%8E%CF%83%CF%83%CE%B1%CE%B9).
 
-Every change made to the Wikisource text is shown on the entry it affects, beside the original
-lines and a link to the exact Wikisource revision used. The rules are summarised on the site's
-"About" page (`method.html`).
+This site is meant to offer an accessible and user-friendly interface to access Hesychius' Greek lexicon. The text comes from <a href="https://el.wikisource.org/wiki/%CE%93%CE%BB%CF%8E%CF%83%CF%83%CE%B1%CE%B9">Greek Wikisource </a>, not cross-referenced with any printed editions.  My thanks to the Wikisource editors, to the Perseus Digital Library, and the Logeion project. 
+
+I have only made typographical edits to the Wikisource text,  shown on each affected entry. See "About" (`method.html`) for more.
 
 ## Rebuilding the data
 
