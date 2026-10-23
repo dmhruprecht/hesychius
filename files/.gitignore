@@ -1,0 +1,11 @@
+# The 270 MB of LSJ source files are re-downloaded by build_lsj.py; only their manifest is kept.
+raw_lsj/*.xml
+
+# Python's scratch space and operating-system clutter
+__pycache__/
+*.pyc
+Thumbs.db
+.DS_Store
+
+# my silly stuff
+/old method, with longer about page.html

@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hesychius, Γλῶσσαι: look up an entry</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<script>
+/* Apply saved display choices before the page paints, so there is no flash. */
+(function () {
+  try {
+    var t = localStorage.getItem("hesychius.theme"), g = localStorage.getItem("hesychius.greek");
+    if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    if (g === "gentium" || g === "system") document.documentElement.setAttribute("data-greek", g);
+    if (localStorage.getItem("hesychius.recent.visible") === "hide") document.documentElement.setAttribute("data-recent", "hidden");
+  } catch (e) {}
+})();
+</script>
+<style>
+  :root {
+    color-scheme: light;
+    --paper: #eceff1;
+    --field: #dde3e7;
+    --ink: #17222b;
+    --muted: #55656f;
+    --rule: #c3ced4;
+    --accent: #1d5a73;
+    --accent-ink: #ffffff;
+    --mark: #f3dc8c;
+    --warn: #9a5b00;
+    --font: "New Athena Unicode", "Gentium Plus", "Palatino Linotype", "Book Antiqua", "Times New Roman", serif;
+  }
+  :root[data-greek="gentium"] { --font: "Gentium Plus", "Palatino Linotype", "Book Antiqua", "Times New Roman", serif; }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --paper: #131b21; --field: #0b1115; --ink: #e4eaee; --muted: #94a5af; --rule: #2b3a44;
+      --accent: #7fc0d9; --accent-ink: #0d1418; --mark: #6b5a1c; --warn: #e2b04e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+      color-scheme: dark;
+      --paper: #131b21; --field: #0b1115; --ink: #e4eaee; --muted: #94a5af; --rule: #2b3a44;
+      --accent: #7fc0d9; --accent-ink: #0d1418; --mark: #6b5a1c; --warn: #e2b04e;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--paper); }
+  body {
+    margin: 0;
+    color: var(--ink);
+    font-family: var(--font);
+    font-size: 1.05rem;
+    line-height: 1.5;
+  }
+  main.page {
+    max-width: 60rem; margin: 0 auto; padding: .25rem 1.25rem 3rem;
+    display: grid; grid-template-columns: minmax(0, 1fr); column-gap: 2.5rem;
+    grid-template-areas: "top" "search" "recent" "results" "foot";
+  }
+  .top { grid-area: top; }
+  .search { grid-area: search; }
+  #recent { grid-area: recent; }
+  #results { grid-area: results; }
+  main.page > footer { grid-area: foot; }
+  @media (min-width: 62rem) {
+    main.page {
+      grid-template-columns: minmax(0, 42rem) 14rem;
+      grid-template-areas: "top ." "search recent" "results recent" "foot .";
+      align-items: start;
+    }
+    main.page #recent {
+      position: sticky; top: 1.5rem;
+      margin-top: 0; padding-left: 1.25rem; border-left: 1px solid var(--rule);
+    }
+    main.page #recent ul { display: block; }
+    main.page #recent li + li { margin-top: .1rem; }
+  }
+
+  h1 { font-size: 1.75rem; line-height: 1.2; margin: 0 0 .15rem; font-weight: 700; }
+  .sub { color: var(--muted); margin: 0 0 1.25rem; font-size: .95rem; }
+  .sub a { color: var(--accent); text-underline-offset: 3px; }
+  .sub a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+  label { display: block; color: var(--muted); font-size: .9rem; margin-bottom: .1rem; }
+  #q {
+    width: 100%;
+    font: inherit;
+    font-size: 1.5rem;
+    padding: .45rem .8rem;
+    color: var(--ink);
+    background: var(--field);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+  }
+  #q::placeholder { color: var(--muted); opacity: .8; }
+  #q:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-color: var(--accent); }
+  .hint { color: var(--muted); font-size: .9rem; margin: .4rem 0 0; }
+
+
+  #results { margin-top: 1.25rem; }
+  .group-title { color: var(--muted); font-size: .95rem; margin: 1.25rem 0 0; font-style: italic; }
+  .entry { padding: .8rem 0; border-bottom: 1px solid var(--rule); }
+  #results article.entry:last-of-type { border-bottom: 0; }
+  .entry h2 { font-size: 1.45rem; margin: 0 0 .1rem; font-weight: 700; line-height: 1.25; }
+  .entry p { margin: 0; max-width: 40rem; }
+  .entry p + p { margin-top: .25rem; }
+  .topbar { position: relative; height: 2.75rem; padding: .5rem 0 0 .75rem; }
+  #menu-btn { display: inline-flex; align-items: center; justify-content: center; width: 2.25rem; height: 2.25rem;
+              padding: 0; color: var(--ink); background: none; border: 1px solid transparent; border-radius: 4px; cursor: pointer; }
+  #menu-btn:hover, #menu-btn[aria-expanded="true"] { border-color: var(--rule); }
+  #menu-btn[aria-expanded="true"] { background: color-mix(in srgb, var(--ink) 6%, transparent); }
+  #menu-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  #menu-btn svg { width: 1.25rem; height: 1.25rem; }
+  #menu { position: absolute; top: 3rem; left: .75rem; z-index: 10; width: 16rem; max-width: calc(100vw - 1.5rem);
+          padding: .8rem 1rem .6rem; background: color-mix(in srgb, var(--paper) 94%, var(--ink)); color: var(--ink); border: 1px solid var(--rule);
+          border-radius: 4px; box-shadow: 0 6px 18px rgb(0 0 0 / .14); font-size: .9rem; }
+  #menu[hidden] { display: none; }
+  #menu h2 { font-size: 1rem; line-height: 1.3; margin: 0 0 .4rem; }
+  #menu .opt-group { margin: 0 0 .6rem; }
+  #menu .opt-legend { display: block; color: var(--muted); font-size: .85rem; margin: 0 0 .1rem; }
+  #menu .opt { display: block; position: relative; margin: 0; padding: .1rem 0; color: var(--ink);
+               font-size: .9rem; cursor: pointer; }
+  #menu .opt input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+  #menu .opt > span { position: relative; display: block; padding-left: .95rem; }
+  #menu .opt > span::before { content: ""; position: absolute; left: 0; top: .5em; width: .5rem; height: .5rem;
+                              border-radius: 50%; border: 1.5px solid var(--muted); }
+  #menu .opt input:checked + span::before { background: var(--accent); border-color: var(--accent); }
+  #menu .opt input:checked + span { color: var(--accent); }
+  #menu .opt input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 3px; }
+  #menu .menu-links { display: flex; flex-direction: column; gap: .25rem; margin-top: .2rem; padding-top: .6rem;
+                      border-top: 1px solid var(--rule); }
+  #menu .menu-links a { width: fit-content; color: var(--accent); text-underline-offset: 3px; }
+  #menu .menu-links a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  /* Recent searches hidden: drop the right-hand column and centre the page. */
+  :root[data-recent="hidden"] #recent { display: none; }
+  @media (min-width: 62rem) {
+    :root[data-recent="hidden"] main.page {
+      grid-template-columns: minmax(0, 42rem); justify-content: center;
+      grid-template-areas: "top" "search" "results" "foot";
+    }
+  }
+  /* "System default" Greek font: Greek-language text uses the browser's own default font. */
+  :root[data-greek="system"] :lang(grc), :root[data-greek="system"] #q { font-family: initial; }
+  #recent { margin-top: 1.25rem; font-size: .95rem; }
+  #recent h2 { font-size: 1rem; line-height: 1.3; margin: 0 0 .35rem; }
+  #recent ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .15rem 1rem; }
+  #recent li button {
+    font: inherit; font-size: 1.05rem; color: var(--ink); background: none; border: 0;
+    padding: .05rem 0; cursor: pointer; text-align: left; text-underline-offset: 3px;
+  }
+  #recent li button:hover { color: var(--accent); text-decoration: underline; }
+  #recent button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  #recent .how { color: var(--muted); font-size: .85rem; margin-left: .35rem; }
+  #recent-empty, .recent-foot { color: var(--muted); font-size: .9rem; margin: 0; }
+  #recent-empty:not([hidden]) + .recent-foot { margin-top: .5rem; }
+  .recent-foot { margin-top: .75rem; }
+  #recent-clear { font: inherit; font-size: .9rem; color: var(--accent); background: none; border: 0; padding: 0;
+                  margin-right: .6rem; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+  .prov { margin-top: .5rem; padding-left: .7rem; font-size: .9rem; color: var(--muted); max-width: 40rem; }
+  .prov.uncertain { border-left: 3px solid var(--warn); }
+  .prov.routine { border-left: 3px solid var(--rule); }
+  .prov strong { color: var(--ink); }
+  .prov summary { cursor: pointer; list-style: none; }
+  .prov summary::-webkit-details-marker { display: none; }
+  .prov summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .prov .when-closed, .prov .when-open { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+  .prov .when-open { display: none; }
+  .prov[open] .when-open { display: inline; }
+  .prov[open] .when-closed { display: none; }
+  .prov pre { margin: .3rem 0 0; padding: .4rem .6rem; white-space: pre-wrap; overflow-wrap: anywhere;
+              font-family: inherit; font-size: .9rem; color: var(--ink);
+              background: color-mix(in srgb, var(--ink) 6%, transparent); }
+  .actions { margin-top: .45rem; display: flex; gap: .9rem; flex-wrap: wrap; font-size: .9rem; }
+  .lsj { margin-top: .5rem; padding-left: .7rem; border-left: 3px solid var(--accent); font-size: .9rem; max-width: 40rem; }
+  .lsj p { margin: 0; }
+  .lsj .lsj-row + .lsj-row { margin-top: .2rem; }
+  .lsj .lsj-note { margin-bottom: .2rem; color: var(--muted); font-size: .85rem; font-style: italic; }
+  .lsj .lsj-foot { margin-top: .35rem; color: var(--muted); font-size: .85rem; }
+  .lsj-foot a { color: var(--accent); text-underline-offset: 3px; }
+  .actions a, .actions button, #more {
+    font: inherit; font-size: .9rem; color: var(--accent);
+    background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .actions a:focus-visible, .actions button:focus-visible, #more:focus-visible {
+    outline: 3px solid var(--accent); outline-offset: 3px;
+  }
+  mark { background: var(--mark); color: inherit; padding: 0 .05em; border-radius: 2px; }
+  .empty { color: var(--muted); }
+  #more { margin-top: .9rem; }
+  footer { margin-top: 1.75rem; padding-top: .9rem; border-top: 1px solid var(--rule); color: var(--muted); font-size: .85rem; }
+  footer p { margin: 0 0 .5rem; }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button type="button" id="menu-btn" aria-label="Options" aria-expanded="false" aria-controls="menu">
+    <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 5h14M3 10h14M3 15h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+  </button>
+  <div id="menu" hidden>
+    <h2>Display</h2>
+    <div class="opt-group" role="radiogroup" aria-labelledby="opt-theme">
+      <span class="opt-legend" id="opt-theme">Theme</span>
+      <label class="opt"><input type="radio" name="theme" value="system"><span>System</span></label>
+      <label class="opt"><input type="radio" name="theme" value="light"><span>Light</span></label>
+      <label class="opt"><input type="radio" name="theme" value="dark"><span>Dark</span></label>
+    </div>
+    <div class="opt-group" role="radiogroup" aria-labelledby="opt-greek">
+      <span class="opt-legend" id="opt-greek">Greek font</span>
+      <label class="opt"><input type="radio" name="greek" value="nau"><span>New Athena Unicode</span></label>
+      <label class="opt"><input type="radio" name="greek" value="gentium"><span>Gentium Plus</span></label>
+      <label class="opt"><input type="radio" name="greek" value="system"><span>System default</span></label>
+    </div>
+    <div class="opt-group" role="radiogroup" aria-labelledby="opt-recent">
+      <span class="opt-legend" id="opt-recent">Recent searches</span>
+      <label class="opt"><input type="radio" name="recent" value="show"><span>Show</span></label>
+      <label class="opt"><input type="radio" name="recent" value="hide"><span>Hide</span></label>
+    </div>
+    <nav class="menu-links" aria-label="More">
+      <a href="method.html">About</a>
+      <!-- TODO: set these two addresses when they exist. Until then they do nothing. -->
+      <a href="#" data-placeholder>Contact</a>
+      <a href="#" data-placeholder>iOS / Android app</a>
+    </nav>
+  </div>
+</div>
+
+<main class="page">
+  <header class="top">
+    <h1 lang="grc">Ἡσυχίου Γλῶσσαι</h1>
+    <p class="sub">The lexicon of Hesychius of Alexandria, per <a href="https://el.wikisource.org/wiki/%CE%93%CE%BB%CF%8E%CF%83%CF%83%CE%B1%CE%B9" target="_blank" rel="noopener">Wikisource</a></p>
+  </header>
+
+  <section class="search">
+    <input id="q" type="search" lang="grc" autocomplete="off" autocapitalize="off"
+           spellcheck="false" placeholder="ζήτησον" aria-label="Search the lexicon" autofocus>
+    <p class="hint">Accents, breathings and capitals don’t matter: <em lang="grc">θαυνον</em> finds <em lang="grc">θαῦνον</em>.
+    Latin letters are read as Beta Code: <em>qau=non</em>.</p>
+    <p id="interp" class="hint" hidden></p>
+  </section>
+
+  <aside id="recent" aria-labelledby="recent-title">
+    <h2 id="recent-title">Recent searches</h2>
+    <ul id="recent-list"></ul>
+    <p id="recent-empty">Words you look up will appear here.</p>
+    <p class="recent-foot"><button type="button" id="recent-clear" hidden>Clear</button>
+    <span>Kept only in this browser.</span></p>
+  </aside>
+
+  <div id="results" aria-live="polite"></div>
+
+  <footer>
+    <p id="notice" hidden></p>
+    <p>Text from the Greek <a href="https://el.wikisource.org/wiki/%CE%93%CE%BB%CF%8E%CF%83%CF%83%CE%B1%CE%B9">Wikisource</a>,
+    modified as described on every entry we edited, under
+    <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.
+    <a href="method.html#credits">Credits, license and sources</a>.</p>
+  </footer>
+</main>
+
+<!-- The lexicon data. This file is produced by the build step. -->
+<script src="lexicon.js"></script>
+<!-- Optional: made by build_lsj.py. Without it, the "Show LSJ entry" button simply does not appear. -->
+<script src="lsj.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Normalising Greek so that accents/case don't matter ----------
+  // Strips accents, breathings, iota subscripts, capitals and the editors' <> [] brackets;
+  // makes ς and σ equal.
+  function normChar(ch) {
+    return ch.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+             .toLowerCase().replace(/ς/g, "σ").replace(/[<>\[\]]/g, "");
+  }
+  // Returns the normalised string plus a map from each normalised
+  // position back to its position in the original (used for highlighting).
+  function normWithMap(s) {
+    s = s.normalize("NFC");
+    let n = "", map = [];
+    let i = 0;
+    for (const ch of s) {
+      const nc = normChar(ch);
+      for (let k = 0; k < nc.length; k++) map.push(i);
+      n += nc;
+      i += ch.length;
+    }
+    return { orig: s, n, map };
+  }
+  function cleanQuery(s) {
+    return normWithMap(s).n.replace(/[<>\[\]()·⋅;,.·"'‘’“”?!·]/g, "").replace(/\s+/g, " ").trim();
+  }
+
+  // ---------- Build the search index once, at page load ----------
+  // (Quick whole-string version of the normalisation, to keep loading fast
+  // even with tens of thousands of entries.)
+  function fastNorm(s) {
+    return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase().replace(/ς/g, "σ").replace(/[<>\[\]]/g, "");
+  }
+  const entries = LEXICON.map(function (e, id) {
+    return { id: id, h: e.h, t: e.t, p: e.p, m: e.m || "", f: e.f || "", s: e.s || "", k: e.k || "", j: e.j || null, o: e.o || "",
+             hn: fastNorm(e.h), tn: fastNorm(e.t) };
+  });
+
+  // ---------- Highlighting ----------
+  function esc(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function highlight(original, normalized, map, q) {
+    if (!q) return esc(original);
+    let out = "", last = 0, from = 0;
+    while (true) {
+      const at = normalized.indexOf(q, from);
+      if (at === -1) break;
+      const start = map[at];
+      let end = map[at + q.length - 1] + 1;
+      while (end < original.length && /[\u0300-\u036f]/.test(original[end])) end++;
+      // handle surrogate pairs / multi-unit characters simply
+      if (start < last) { from = at + 1; continue; }
+      out += esc(original.slice(last, start)) + "<mark>" + esc(original.slice(start, end)) + "</mark>";
+      last = end;
+      from = at + q.length;
+    }
+    return out + esc(original.slice(last));
+  }
+
+  // ---------- Reading Beta Code typed into the search box ----------
+  // Beta Code writes Greek with Latin letters: Q=θ, C=ξ, Y=ψ, X=χ, W=ω, H=η ...
+  // After a letter:  )  smooth   (  rough   /  acute   \  grave   =  circumflex
+  //                  |  iota subscript   +  diaeresis.   * before a letter = capital.
+  const BETA_LETTERS = { A: "α", B: "β", G: "γ", D: "δ", E: "ε", Z: "ζ", H: "η", Q: "θ", I: "ι",
+    K: "κ", L: "λ", M: "μ", N: "ν", C: "ξ", O: "ο", P: "π", R: "ρ", S: "σ", T: "τ", U: "υ",
+    F: "φ", X: "χ", Y: "ψ", W: "ω", V: "ϝ" };
+  const BETA_MARKS = { ")": "\u0313", "(": "\u0314", "/": "\u0301", "\\": "\u0300",
+                       "=": "\u0342", "|": "\u0345", "+": "\u0308" };
+  function isBetaLetter(c) { return !!c && /[A-Za-z]/.test(c) && !!BETA_LETTERS[c.toUpperCase()]; }
+  function betaToGreek(src) {
+    let out = "", i = 0;
+    const n = src.length;
+    while (i < n) {
+      let ch = src[i], capital = false, marks = "";
+      if (ch === "*") {
+        capital = true; i++;
+        while (i < n && BETA_MARKS[src[i]]) { marks += BETA_MARKS[src[i]]; i++; }
+        if (i >= n) { out += "*"; break; }
+        ch = src[i];
+      }
+      // Accented Latin capitals (Á, Û ...) carry their accent: split letter and accent.
+      const parts = ch.normalize("NFD");
+      const base = parts[0];
+      if (!isBetaLetter(base)) { out += ch; i++; continue; }
+      for (const c of parts.slice(1)) {
+        if (c === "\u0301" || c === "\u0300" || c === "\u0308") marks += c;
+        else if (c === "\u0302") marks += "\u0342";       // circumflex -> Greek circumflex
+      }
+      ch = base;
+      i++;
+      while (i < n && BETA_MARKS[src[i]]) { marks += BETA_MARKS[src[i]]; i++; }
+      const up = ch.toUpperCase();
+      let g = BETA_LETTERS[up];
+      if (up === "S") {                         // σ in the middle of a word, ς at the end
+        if (src[i] === "1" || src[i] === "3") i++;             // S1, S3: plain σ
+        else if (src[i] === "2") { g = "ς"; i++; }             // S2: final ς
+        else if (!isBetaLetter(src[i])) g = "ς";
+      }
+      out += (capital ? g.toUpperCase() : g) + marks;
+    }
+    return out.normalize("NFC");
+  }
+
+  // ---------- Searching ----------
+  function search(q) {
+    const exact = [], starts = [], contains = [], inText = [];
+    for (const e of entries) {
+      const hn = e.hn;
+      if (hn === q) exact.push(e);
+      else if (hn.startsWith(q)) starts.push(e);
+      else if (hn.includes(q)) contains.push(e);
+      else if (e.tn.includes(q)) inText.push(e);
+    }
+    return [
+      { title: null, items: exact },
+      { title: "Entries that begin with these letters", items: starts },
+      { title: "Entries that contain these letters in the headword", items: contains },
+      { title: "In the text of other entries", items: inText }
+    ].filter(function (g) { return g.items.length; });
+  }
+
+  // ---------- Showing results ----------
+  const input = document.getElementById("q");
+  const results = document.getElementById("results");
+  const notice = document.getElementById("notice");
+  const interp = document.getElementById("interp");
+  const PAGE_SIZE = 25;
+  let shown = PAGE_SIZE, currentQ = "", currentGroups = [];
+
+  if (typeof LEXICON_INFO !== "undefined" && LEXICON_INFO.demo) {
+    notice.hidden = false;
+    notice.textContent = "Demo data: placeholder entries, not Hesychius.";
+  }
+
+  if (typeof LEXICON_INFO !== "undefined" && !LEXICON_INFO.demo &&
+      (LEXICON_INFO.flagged || LEXICON_INFO.processed)) {
+    notice.hidden = false;
+    notice.textContent = LEXICON_INFO.flagged.toLocaleString() + " of " + LEXICON_INFO.count.toLocaleString() +
+      " entries flagged as possible errors; " + LEXICON_INFO.processed.toLocaleString() +
+      " more have cleaned text. Each shows its original.";
+  }
+
+  // ---------- Links to the exact version of the Wikisource page ----------
+  function pageInfo(e) {
+    return ((typeof LEXICON_INFO !== "undefined" && LEXICON_INFO.pages) || {})[e.p];
+  }
+  function sourceBase(e) {
+    const title = e.p.replace(/ /g, "_");
+    const info = pageInfo(e);
+    if (info && info.rev) {
+      return "https://el.wikisource.org/w/index.php?title=" + encodeURIComponent(title) + "&oldid=" + info.rev;
+    }
+    return "https://el.wikisource.org/wiki/" + encodeURI(title);
+  }
+  // The text to highlight on the Wikisource page: the headword as it is
+  // printed THERE (for converted entries that is the original, not our Greek).
+  function fragmentTerm(e) {
+    let t = e.h;
+    if (e.o) {
+      t = e.o.split("\n")[0].replace(/^[\s*†\[\]()]+/, "").replace(/^[a-z]\)\s*/, "").replace(/^<+/, "");
+      t = t.split(/[>:]/)[0];
+    }
+    return t.replace(/[<>\[\]]/g, "").trim().slice(0, 40);
+  }
+  // Logeion (University of Chicago) shows the LSJ and other dictionaries, and looks up inflected forms.
+  // A link is offered only for a headword that is one Greek word; phrases and bracketed headwords are skipped.
+  function logeionUrl(e) {
+    const word = e.h.normalize("NFC");
+    if (!/^[\u0370-\u03FF\u1F00-\u1FFF\u0300-\u036F]+$/.test(word)) return null;
+    return "https://logeion.uchicago.edu/" + encodeURIComponent(word);
+  }
+  function wikisourceUrl(e) {
+    return sourceBase(e) + "#:~:text=" + encodeURIComponent(fragmentTerm(e));
+  }
+
+  // ---------- Notes on edited entries ----------
+  const KIND_SHORT = {
+    "stray bracket": "brackets repaired",
+    "several bracketed lemmas": "several lemmas read as one headword",
+    "lemma and gloss on one line": "headword and definition split",
+    "square-bracketed entry": "square brackets repaired"
+  };
+  // ---------- Quick LSJ definitions (only if lsj.js is present) ----------
+  function lsjFor(e) {
+    return typeof LSJ !== "undefined" ? (LSJ[fastNorm(e.h)] || null) : null;
+  }
+  function lsjButton(e) {
+    return lsjFor(e) ? "<button type='button' data-lsj='" + e.id + "' aria-expanded='false'>Show LSJ entry</button>" : "";
+  }
+  // A gloss entry is stored as "Greek gloss (Hsch., Phot.)". The note names its real sources.
+  const LSJ_SOURCE = { "Hsch.": "Hesychius", "Phot.": "Photius", "Suid.": "the Suda", "Cyr.": "Cyril's lexicon", "Gloss.": "the glossaries" };
+  function lsjGlossRow(r) {
+    const m = r[1].match(/^(.*?)\s*\(([^()]*)\)\s*$/);
+    const gloss = m ? m[1] : r[1];
+    const sources = m ? m[2].split(/,\s*/).filter(Boolean) : [];
+    const name = function (s) { return LSJ_SOURCE[s] || s; };
+    let note;
+    if (!sources.length) note = "LSJ gloss entry";
+    else if (sources.indexOf("Hsch.") >= 0) {
+      const more = sources.filter(function (s) { return s !== "Hsch."; }).map(name);
+      note = "LSJ entry taken from Hesychius" + (more.length ? " (also " + more.join(", ") + ")" : "");
+    } else note = "LSJ entry taken from " + sources.map(name).join(", ");
+    return "<p class='lsj-row'><strong lang='grc'>" + esc(r[0]) + "</strong> <span lang='grc'>" + esc(gloss) + "</span></p>" +
+           "<p class='lsj-note'>" + esc(note) + "</p>";
+  }
+  function lsjPanel(e) {
+    // Accents and breathings tell Greek words apart, so an exact match is shown alone;
+    // near matches (same letters, different marks) appear only when there is no exact one.
+    const exact = e.h.normalize("NFC"), all = lsjFor(e);
+    const same = all.filter(function (r) { return r[0].normalize("NFC") === exact; });
+    const rows = (same.length ? same : all).slice(0, 3);
+    const url = logeionUrl(e);
+    return "<div class='lsj'>" +
+      (same.length ? "" : "<p class='lsj-note'>No exact match. Closest LSJ headwords, differing in accent or breathing:</p>") +
+      rows.map(function (r) {
+        return r[2] === "g"
+          ? lsjGlossRow(r)
+          : "<p class='lsj-row'><strong lang='grc'>" + esc(r[0]) + "</strong> " + esc(r[1]) + "</p>";
+      }).join("") + "<p class='lsj-foot'>LSJ, from the Perseus Digital Library (CC BY-SA 4.0)." +
+      (url ? " <a href='" + url + "' target='_blank' rel='noopener'>Full entry in Logeion</a>" : "") + "</p></div>";
+  }
+  function logeionLink(e) {
+    const url = logeionUrl(e);
+    return url ? "<a href='" + url + "' target='_blank' rel='noopener' title='LSJ and other dictionaries'>Look up in Logeion</a>" : "";
+  }
+  function provenanceFor(e) {
+    if (!e.f && !e.s) return "";
+    const f = e.f, s = e.s, items = [];
+    if (f.indexOf("b") >= 0) items.push("converted from Beta Code");
+    if (f.indexOf("r") >= 0) items.push(KIND_SHORT[e.k] || "formatting repaired");
+    if (f.indexOf("g") >= 0) items.push("extra lines attached");
+    if (f.indexOf("e") >= 0) items.push("no definition on Wikisource");
+    if (s.indexOf("c") >= 0) items.push("bracketed line read as definition");
+    if (s.indexOf("u") >= 0) items.push("headword had no brackets");
+    if (s.indexOf("h") >= 0 && e.j) {
+      items.push("hyphens joined (<span lang='grc'>" + esc(e.j.slice(0, 3).join("; ")) + (e.j.length > 3 ? "; +" + (e.j.length - 3) + " more" : "") + "</span>)");
+    }
+    const uncertain = !!f;
+    return "<details class='prov " + (uncertain ? "uncertain" : "routine") + "'>" +
+      "<summary><strong>" + (uncertain ? "Possible error:" : "Cleaned text:") + "</strong> " + items.join("; ") + ". " +
+      "<span class='when-closed'>Show original</span><span class='when-open'>Hide original</span></summary>" +
+      "<pre lang='grc'>" + esc(e.o || "") + "</pre></details>";
+  }
+
+  function render() {
+    results.innerHTML = "";
+    if (!currentQ) {
+      results.innerHTML = '<p class="empty">Start typing. ' + entries.length.toLocaleString() +
+                          ' entries are searchable.</p>';
+      return;
+    }
+    if (!currentGroups.length) {
+      results.innerHTML = '<p class="empty">No entry matches “' + esc(input.value.trim()) +
+        '”. Try fewer letters, since the headword may be spelled differently in Hesychius.</p>';
+      return;
+    }
+    let count = 0, total = currentGroups.reduce(function (n, g) { return n + g.items.length; }, 0);
+    for (const g of currentGroups) {
+      if (count >= shown) break;
+      if (g.title) {
+        const gt = document.createElement("p");
+        gt.className = "group-title"; gt.textContent = g.title;
+        results.appendChild(gt);
+      }
+      for (const e of g.items) {
+        if (count >= shown) break;
+        count++;
+        const art = document.createElement("article");
+        art.className = "entry";
+        const hm = normWithMap(e.h), tm = normWithMap(e.t);
+        const hl = highlight(hm.orig, hm.n, hm.map, currentQ);
+        const tl = highlight(tm.orig, tm.n, tm.map, currentQ);
+        const marks = e.m ? "<span class='marks' title='Editorial marks printed before this headword'>" + esc(e.m) + "</span> " : "";
+        art.innerHTML = "<h2 lang='grc'>" + marks + hl + "</h2><p lang='grc'>" +
+          tl.replace(/\n/g, "</p><p lang='grc'>") + "</p>" + provenanceFor(e) +
+          "<div class='actions'><a href='" + wikisourceUrl(e) + "' target='_blank' rel='noopener'>View on Wikisource</a>" +
+          logeionLink(e) + lsjButton(e) +
+          "<button type='button' data-copy='" + e.id + "'>Copy entry</button></div>";
+        results.appendChild(art);
+      }
+    }
+    if (count < total) {
+      const more = document.createElement("button");
+      more.id = "more"; more.type = "button";
+      more.textContent = "Show more (" + (total - count).toLocaleString() + " remaining)";
+      more.addEventListener("click", function () { shown += PAGE_SIZE; render(); });
+      results.appendChild(more);
+    }
+  }
+
+  results.addEventListener("click", function (ev) {
+    const b = ev.target.closest("button[data-copy]");
+    if (!b) return;
+    const e = entries[+b.dataset.copy];
+    navigator.clipboard.writeText(e.h + "\n" + e.t).then(function () {
+      b.textContent = "Copied";
+      setTimeout(function () { b.textContent = "Copy entry"; }, 1500);
+    });
+  });
+
+  function showInterp(html) {
+    interp.hidden = !html;
+    interp.innerHTML = html;
+  }
+
+  function run() {
+    const typed = input.value;
+    const hasLatin = /[A-Za-z]/.test(typed);
+    const hasGreek = /[\u0370-\u03ff\u1f00-\u1fff]/.test(typed);
+    let effective = typed;
+    showInterp("");
+    if (hasLatin && !hasGreek) {
+      effective = betaToGreek(typed);
+      showInterp("Read as Beta Code: <span lang='grc'>" + esc(effective) + "</span>");
+    }
+    currentQ = cleanQuery(effective);
+    currentGroups = currentQ ? search(currentQ) : [];
+    shown = PAGE_SIZE;
+    render();
+    // Keep the address bar in sync so a search can be bookmarked or shared.
+    const hash = currentQ ? "#q=" + encodeURIComponent(input.value.trim()) : "";
+    history.replaceState(null, "", location.pathname + location.search + hash);
+  }
+
+  // ---------- Recent searches (kept only in this browser) ----------
+  // A tiny storage helper: remembers in this browser, or just for this visit if the browser blocks storage.
+  const store = (function () {
+    const memory = {};
+    try {
+      localStorage.setItem("__probe", "1"); localStorage.removeItem("__probe");
+      return {
+        get: function (k) { try { return localStorage.getItem(k); } catch (e) { return memory[k] || null; } },
+        set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) { memory[k] = v; } }
+      };
+    } catch (e) {
+      return { get: function (k) { return memory[k] || null; }, set: function (k, v) { memory[k] = v; } };
+    }
+  })();
+  const RECENT_KEY = "hesychius.recent.v1", RECENT_MAX = 12;
+  let recent = [], recordTimer = null;
+  try {
+    const saved = JSON.parse(store.get(RECENT_KEY) || "[]");
+    if (Array.isArray(saved)) {
+      recent = saved.filter(function (r) { return r && typeof r.q === "string" && typeof r.n === "string"; })
+                    .slice(0, RECENT_MAX);
+    }
+  } catch (e) {}
+  const recentList = document.getElementById("recent-list");
+  const recentEmpty = document.getElementById("recent-empty");
+  const recentClear = document.getElementById("recent-clear");
+
+  function isBetaTyped(q) {
+    return /[A-Za-z]/.test(q) && !/[\u0370-\u03ff\u1f00-\u1fff]/.test(q);
+  }
+  function renderRecent() {
+    recentList.innerHTML = "";
+    recentEmpty.hidden = recent.length > 0;
+    recentClear.hidden = recent.length === 0;
+    recent.forEach(function (r, i) {
+      const li = document.createElement("li"), b = document.createElement("button");
+      b.type = "button"; b.dataset.i = i;
+      const beta = isBetaTyped(r.q);
+      const word = document.createElement("span");
+      word.lang = "grc"; word.textContent = beta ? betaToGreek(r.q) : r.q;
+      b.appendChild(word);
+      if (beta) {
+        const how = document.createElement("span");
+        how.className = "how"; how.textContent = r.q;
+        b.title = "You typed " + r.q + " (Beta Code)";
+        b.appendChild(how);
+      }
+      li.appendChild(b); recentList.appendChild(li);
+    });
+  }
+  // Remember a search once it has found something and the reader has settled on it.
+  function recordNow() {
+    clearTimeout(recordTimer);
+    const typed = input.value.trim();
+    if (!typed || currentQ.length < 2 || !currentGroups.length) return;
+    recent = recent.filter(function (r) { return r.n !== currentQ; });
+    recent.unshift({ q: typed, n: currentQ });
+    recent = recent.slice(0, RECENT_MAX);
+    store.set(RECENT_KEY, JSON.stringify(recent));
+    renderRecent();
+  }
+  function scheduleRecord() {
+    clearTimeout(recordTimer);
+    recordTimer = setTimeout(recordNow, 1500);
+  }
+  recentList.addEventListener("click", function (ev) {
+    const b = ev.target.closest("button[data-i]");
+    if (!b) return;
+    const r = recent[+b.dataset.i];
+    input.value = r.q;
+    run();
+    input.focus();
+    scheduleRecord();
+  });
+  recentClear.addEventListener("click", function () {
+    recent = [];
+    store.set(RECENT_KEY, "[]");
+    renderRecent();
+  });
+  results.addEventListener("click", function (ev) {
+    const lb = ev.target.closest("button[data-lsj]");
+    if (lb) {
+      const art = lb.closest("article"), open = art.querySelector(".lsj");
+      if (open) { open.remove(); lb.textContent = "Show LSJ entry"; lb.setAttribute("aria-expanded", "false"); }
+      else {
+        art.querySelector(".actions").insertAdjacentHTML("afterend", lsjPanel(entries[+lb.dataset.lsj]));
+        lb.textContent = "Hide LSJ entry"; lb.setAttribute("aria-expanded", "true");
+      }
+    }
+    if (ev.target.closest("a, button[data-copy], button[data-lsj]")) recordNow();   // opening or copying an entry counts
+  });
+  input.addEventListener("keydown", function (ev) { if (ev.key === "Enter") recordNow(); });
+  renderRecent();
+
+  // ---------- Display options: theme and Greek font ----------
+  const THEME_KEY = "hesychius.theme", GREEK_KEY = "hesychius.greek";
+  const rootEl = document.documentElement;
+  function applyTheme(v) {
+    if (v === "light" || v === "dark") rootEl.setAttribute("data-theme", v);
+    else rootEl.removeAttribute("data-theme");              // "system": follow the device
+  }
+  function applyGreek(v) {
+    if (v === "gentium" || v === "system") rootEl.setAttribute("data-greek", v);
+    else rootEl.removeAttribute("data-greek");              // default: New Athena Unicode
+  }
+  const RECENT_VIS_KEY = "hesychius.recent.visible";
+  function applyRecentVisibility(v) {
+    if (v === "hide") rootEl.setAttribute("data-recent", "hidden");
+    else rootEl.removeAttribute("data-recent");
+  }
+  const theme = store.get(THEME_KEY) || "system", greek = store.get(GREEK_KEY) || "nau",
+        recentVis = store.get(RECENT_VIS_KEY) || "show";
+  applyTheme(theme); applyGreek(greek); applyRecentVisibility(recentVis);
+  document.querySelectorAll('#menu input[name="recent"]').forEach(function (r) { r.checked = r.value === recentVis; });
+  document.querySelectorAll('#menu input[name="theme"]').forEach(function (r) { r.checked = r.value === theme; });
+  document.querySelectorAll('#menu input[name="greek"]').forEach(function (r) { r.checked = r.value === greek; });
+  document.getElementById("menu").addEventListener("change", function (ev) {
+    const t = ev.target;
+    if (t.name === "theme") { applyTheme(t.value); store.set(THEME_KEY, t.value); }
+    if (t.name === "greek") { applyGreek(t.value); store.set(GREEK_KEY, t.value); }
+    if (t.name === "recent") { applyRecentVisibility(t.value); store.set(RECENT_VIS_KEY, t.value); }
+  });
+  // ---------- Menu button and panel ----------
+  const menuBtn = document.getElementById("menu-btn"), menuPanel = document.getElementById("menu");
+  function setMenu(open) {
+    menuPanel.hidden = !open;
+    menuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+  menuBtn.addEventListener("click", function () { setMenu(menuPanel.hidden); });
+  document.addEventListener("click", function (ev) {
+    if (!menuPanel.hidden && !menuPanel.contains(ev.target) && !menuBtn.contains(ev.target)) setMenu(false);
+  });
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key === "Escape" && !menuPanel.hidden) { setMenu(false); menuBtn.focus(); }
+  });
+  menuPanel.addEventListener("click", function (ev) {        // placeholder links go nowhere yet
+    if (ev.target.closest("a[data-placeholder]")) ev.preventDefault();
+  });
+
+  input.addEventListener("input", function () { run(); scheduleRecord(); });
+  const m = location.hash.match(/^#q=(.*)$/);
+  if (m) { try { input.value = decodeURIComponent(m[1]); } catch (_) {} }
+  run();
+})();
+</script>
+</body>
+</html>
