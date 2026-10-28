@@ -227,7 +227,7 @@
 <main class="page">
   <header class="top">
     <h1 lang="grc">Ἡσυχίου Γλῶσσαι</h1>
-    <p class="sub">The lexicon of Hesychius of Alexandria, per <a href="https://el.wikisource.org/wiki/%CE%93%CE%BB%CF%8E%CF%83%CF%83%CE%B1%CE%B9" target="_blank" rel="noopener">Wikisource</a></p>
+    <p class="sub">The lexicon of <a href="https://en.wikipedia.org/wiki/Hesychius_of_Alexandria" target="_blank" rel="noopener">Hesychius of Alexandria</a>, per <a href="https://el.wikisource.org/wiki/%CE%93%CE%BB%CF%8E%CF%83%CF%83%CE%B1%CE%B9" target="_blank" rel="noopener">Wikisource</a>.</p>
   </header>
 
   <section class="search">
@@ -512,7 +512,7 @@
   function render() {
     results.innerHTML = "";
     if (!currentQ) {
-      results.innerHTML = '<p class="empty">Start typing. ' + entries.length.toLocaleString() +
+      results.innerHTML = '<p class="empty">' + entries.length.toLocaleString() +
                           ' entries are searchable.</p>';
       return;
     }
